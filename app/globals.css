@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-barlow);
+  --font-display: var(--font-barlow-condensed);
+  --font-heading: var(--font-barlow-condensed);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-ink: var(--primary-ink);
+  --color-tint: var(--tint);
+  --color-graphite: var(--graphite);
+  --color-graphite-2: var(--graphite-2);
+  --color-gold: var(--gold);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+}
+
+:root {
+  /* Scoreboard bands and the electric cyan accent. Cyan always carries graphite text, never white. */
+  --graphite: oklch(0.24 0.01 250);
+  --graphite-2: oklch(0.3 0.012 250); /* cells and cards on a graphite band */
+  --cyan: oklch(0.8 0.13 210);
+  /* Medal tints: rank 1, 2 and 3 badges only. */
+  --gold: oklch(0.86 0.12 90);
+  --silver: oklch(0.88 0.012 250);
+  --bronze: oklch(0.76 0.09 55);
+
+  --primary: var(--cyan);
+  --primary-dark: oklch(0.75 0.13 210); /* hover; graphite text still 7.7:1 */
+  --primary-foreground: var(--graphite);
+  --primary-ink: oklch(0.5 0.1 220); /* cyan family dark enough for text and icons on white (5.8:1) */
+  --tint: oklch(0.95 0.005 250); /* cool grey for zebra rows, inputs and panels */
+  --ring: var(--primary-ink);
+  --background: oklch(0.975 0.003 250);
+  --foreground: oklch(0.22 0.01 250);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--tint);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--tint);
+  --accent-foreground: var(--foreground);
+  --muted: oklch(0.95 0.005 250);
+  --muted-foreground: oklch(0.48 0.015 250);
+  --destructive: oklch(0.53 0.2 25);
+  --border: oklch(0.9 0.006 250);
+  --input: oklch(0.86 0.008 250);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+    font-variant-numeric: tabular-nums; /* counts and ratings line up in every table */
+  }
+  h1, h2, h3 {
+    font-family: var(--font-barlow-condensed);
+    font-weight: 700;
+    line-height: 1.05;
+  }
+  h1, h2 {
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+}
+
+/* Light lift for cards and tables on the grey page. */
+@utility shadow-soft {
+  box-shadow:
+    0 1px 0 0 var(--border),
+    0 10px 24px -18px oklch(0.24 0.01 250 / 0.45);
+}
+
+/* Broadcast-style diagonal stripes over a band's own colour. Set --stripe to change their tint. */
+@utility bg-stripes {
+  background-image: repeating-linear-gradient(-55deg, transparent 0 16px, var(--stripe, oklch(1 0 0 / 0.035)) 16px 32px);
+}
+
+/* One scoreboard digit: a graphite cell split across the middle like a flip counter. */
+@utility digit-cell {
+  background:
+    linear-gradient(transparent 49%, oklch(0 0 0 / 0.45) 49% 51%, transparent 51%),
+    var(--graphite-2);
+}
+
+/* Thin cyan hazard strip that closes off a scoreboard band. */
+@utility stripe-bar {
+  background-image: repeating-linear-gradient(-55deg, var(--primary) 0 8px, transparent 8px 14px);
+}
