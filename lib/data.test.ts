@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { type BusinessRow, type City, categoryNames, photoUrl, toBusiness, toTsQuery } from "./data";
+import { type BusinessRow, type City, categoryNames, getBusiness, photoUrl, toBusiness, toTsQuery } from "./data";
 import { openStatus, parseHours } from "./hours";
 
 test("category names from the database read naturally", () => {
@@ -74,4 +74,34 @@ test("map framing: zoom follows the spread, far-apart results get no map", async
   assert.equal(areaView([{ lat: 51.5, lng: -0.1 }, { lat: 51.55, lng: -0.15 }])?.zoom, 13);
   assert.equal(areaView([{ lat: 51.5, lng: -0.12 }, { lat: 48.86, lng: 2.35 }]), null); // London and Paris
   assert.equal(areaView([]), null);
+});
+
+test("a business in a newly added category reloads the taxonomy once", async () => {
+  const categories = [{ id: 1, name: "dentist", slug: "dentist", group_name: null }];
+  const lists = [{ city_id: 1, category_id: 1, businesses: 9 }];
+  let links = [{ category_id: 1, city_id: 1 }];
+  let loads = 0;
+  const query = async (text: string) => {
+    if (text.includes("from businesses b")) return { rows: [row] };
+    if (text.includes("from business_categories")) return { rows: links };
+    if (text.includes("from cities")) return { rows: [{ id: 1, name: "Mumbai", state: "India", country_code: "in", slug: "mumbai-india" }] };
+    if (text.includes("from city_category_counts")) return { rows: [...lists] }; // a copy, like a real query
+    if (text.includes("from categories")) return loads++, { rows: categories };
+    throw new Error(`unexpected query: ${text}`);
+  };
+  (globalThis as unknown as { pools: unknown }).pools = { WEB_DATABASE_URL: { query } };
+
+  assert.deepEqual((await getBusiness("a-1"))?.categories.map((c) => c.slug), ["dentist"]);
+  assert.equal(loads, 1);
+
+  // Loaded, but too small to publish in this city: normal, so no reload.
+  links = [...links, { category_id: 1, city_id: 2 }];
+  assert.deepEqual((await getBusiness("a-1"))?.categories.map((c) => c.slug), ["dentist"]);
+  assert.equal(loads, 1);
+
+  categories.push({ id: 2, name: "hair salon", slug: "hair-salon", group_name: null });
+  lists.push({ city_id: 1, category_id: 2, businesses: 5 });
+  links = [{ category_id: 2, city_id: 1 }];
+  assert.deepEqual((await getBusiness("a-1"))?.categories.map((c) => c.slug), ["hair-salon"]);
+  assert.equal(loads, 2);
 });
