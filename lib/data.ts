@@ -544,26 +544,19 @@ export async function searchBusinesses(s: SearchParams, page: number, category?:
   if (category) add((p) => `exists (select 1 from business_categories sbc where sbc.business_id = b.id and sbc.category_id = ${p})`, category.id);
   const tsq = category ? toTsQuery(s.loc) : toTsQuery(s.q, s.loc);
   if (tsq) add((p) => `b.search @@ to_tsquery('simple', ${p})`, tsq);
-  const base = [...where];
-  const baseParams = [...params];
   if (s.rating) add((p) => `b.rating >= ${p}`, s.rating);
   if (s.price) add((p) => `b.price = ${p}`, s.price);
   for (const f of s.features) where.push(SEARCH_FEATURES[f].sql);
 
   const clause = where.join(" and ");
-  const [rows, [count], prices] = await Promise.all([
+  const [rows, [count]] = await Promise.all([
     sql<BusinessRow>(
       `select ${COLUMNS} from businesses b where ${clause} order by ${ORDER[s.sort]} limit ${SEARCH_PAGE_SIZE} offset $${params.length + 1}`,
       [...params, (page - 1) * SEARCH_PAGE_SIZE],
     ),
     sql<{ n: number }>(`select count(*)::int as n from (select 1 from businesses b where ${clause} limit ${SEARCH_COUNT_CAP + 1}) t`, params),
-    // Price filter options: symbol-only prices ("$$", "₹₹₹") among the unfiltered matches.
-    sql<{ price: string }>(
-      `select distinct b.price from businesses b where ${base.join(" and ")} and b.price ~ '^[$€£¥₹₩₽₺₫₱฿]{1,4}$' order by 1 limit 6`,
-      baseParams,
-    ),
   ]);
-  return { results: await toBusinesses(rows), total: count.n, prices: prices.map((p) => p.price).sort((a, b) => a.length - b.length) };
+  return { results: await toBusinesses(rows), total: count.n };
 }
 
 // Business lookup for the review, claim and edit forms.

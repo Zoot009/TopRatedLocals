@@ -73,7 +73,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const s = parse(await searchParams);
   const page = Math.min(s.page, Math.ceil(SEARCH_COUNT_CAP / SEARCH_PAGE_SIZE));
   const category = await findCategory(s.q);
-  const [{ results, total, prices }, shortcut, cityLists] = await Promise.all([
+  const [{ results, total }, shortcut, cityLists] = await Promise.all([
     searchBusinesses(s, page, category),
     findListing(category, s.loc),
     category && !s.loc ? getCategoryCities(category) : Promise.resolve([]),
@@ -132,11 +132,6 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           {RATINGS.map((r) => (
             <Link key={r} href={hrefFor(s, { rating: s.rating === r ? 0 : r })} aria-current={s.rating === r ? "true" : undefined} className={pill(s.rating === r)}>
               ★ {r}+
-            </Link>
-          ))}
-          {prices.map((p) => (
-            <Link key={p} href={hrefFor(s, { price: s.price === p ? "" : p })} aria-current={s.price === p ? "true" : undefined} className={pill(s.price === p)}>
-              {p}
             </Link>
           ))}
           {(Object.keys(SEARCH_FEATURES) as SearchFeature[]).map((f) => {
